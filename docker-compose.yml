@@ -1,0 +1,25 @@
+# 只包 sim-independent 層。Isaac Sim 跑在 host（GPU），不進這裡。
+# 用法：docker compose up -d
+services:
+  postgres:
+    image: postgres:16
+    container_name: mfg-postgres
+    environment:
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: mfg
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+
+  adminer:                      # 輕量 DB 瀏覽器，開 http://localhost:8080
+    image: adminer
+    container_name: mfg-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:

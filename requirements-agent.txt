@@ -1,0 +1,16 @@
+# 編排/資料層依賴（裝在 env_agent，不要裝進 env_isaacsim）
+# python3.11 -m venv ~/env_agent && source ~/env_agent/bin/activate
+# pip install -r requirements-agent.txt
+
+mcp                      # MCP server / client
+google-genai             # Gemini Agent（已選定）
+python-dotenv            # 讀 .env（GEMINI_API_KEY）
+psycopg[binary]          # PostgreSQL 驅動 (psycopg3)
+apscheduler              # 規則式排程
+pandas                   # 分析 / KPI
+openpyxl                 # 匯出 .xlsx 給 Power BI
+
+# 開發 / CI
+ruff
+pytest
+pytest-mock

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JobResult",
+  "description": "sim 層 run_job() 回傳、編排/資料層寫入 DB 的結構化結果。這是兩層之間的契約。",
+  "type": "object",
+  "properties": {
+    "model_tag": { "type": "string", "description": "產生此筆的 checkpoint 標籤，例：epoch_200" },
+    "seed": { "type": "integer" },
+    "success": { "type": "boolean" },
+    "cycle_time_steps": { "type": "integer", "minimum": 0 },
+    "failure_stage": {
+      "description": "哪一階段失敗；成功則 null",
+      "type": ["string", "null"],
+      "enum": ["grasp_1", "place_1", "grasp_2", "place_2", "grasp_3", "place_3", null]
+    },
+    "per_cube": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "properties": {
+          "cube_color": { "enum": ["blue", "red", "green"] },
+          "placed_correctly": { "type": "boolean" },
+          "final_xyz": {
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "required": ["cube_color", "placed_correctly"]
+      }
+    }
+  },
+  "required": ["model_tag", "seed", "success", "cycle_time_steps", "per_cube"]
+}

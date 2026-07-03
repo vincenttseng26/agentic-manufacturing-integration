@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+env_agent/
+
+# Tool caches
+.ruff_cache/
+.pytest_cache/
+
+# Secrets / config（.env 內含 API key，絕不 commit）
+.env
+*.key
+
+# Data / artifacts（資料集、模型、hdf5、Power BI 匯出檔不 commit）
+data/*
+!data/.gitkeep
+*.hdf5
+*.pth
+*.xlsx
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store

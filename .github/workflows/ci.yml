@@ -1,0 +1,45 @@
+# Phase 6：只測 sim-independent 層。Isaac Sim 不進 CI。
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:                     # 拋棄式 DB，測 schema / db helper
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: mfg
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install -r requirements-agent.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Test
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGDATABASE: mfg
+          PGUSER: postgres
+          PGPASSWORD: ci
+        run: pytest -q
