@@ -35,8 +35,7 @@ def export(out_dir: str = "data") -> dict:
     if not jobs.empty:
         # 從 model_tag（epoch_200）抽數字 epoch，供 Power BI 折線圖 X 軸正確排序
         jobs["model_epoch"] = jobs["model_tag"].str.extract(r"(\d+)", expand=False).astype(float)
-        jobs = kpi.add_rolling_success_rate(jobs, window=5)
-        jobs = kpi.add_spc_limits(jobs, window=5)
+        jobs = kpi.add_spc_per_group(jobs, group_col="model_tag", window=5)  # 每個 checkpoint 各自算 SPC
         jobs["success_int"] = jobs["success"].astype(int)  # Power BI 加總方便
 
     jobs_path = out / "powerbi_jobs.csv"

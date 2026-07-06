@@ -45,6 +45,23 @@ def add_spc_limits(jobs: pd.DataFrame, window: int = 5) -> pd.DataFrame:
     return jobs
 
 
+def add_spc_per_group(jobs: pd.DataFrame, group_col: str = "model_tag", window: int = 5) -> pd.DataFrame:
+    """對每個 checkpoint（group_col）各自算 rolling 成功率 + p-chart 管制界。
+
+    多 checkpoint 監控時要 per-model 各算（不能全部混在一起），否則管制界會被跨模型的差異汙染。
+    """
+    if jobs.empty:
+        return jobs
+    if group_col not in jobs.columns:
+        return add_spc_limits(add_rolling_success_rate(jobs, window), window)
+    parts = []
+    for _, group in jobs.groupby(group_col):
+        group = add_rolling_success_rate(group, window)
+        group = add_spc_limits(group, window)
+        parts.append(group)
+    return pd.concat(parts, ignore_index=True)
+
+
 def failure_pareto(jobs: pd.DataFrame) -> pd.DataFrame:
     """失敗階段 Pareto（只看失敗的 job）。"""
     fails = jobs[~jobs["success"].astype(bool)]

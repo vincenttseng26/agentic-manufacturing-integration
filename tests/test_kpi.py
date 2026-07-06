@@ -48,3 +48,17 @@ def test_cube_miss_rate():
     res = kpi.cube_miss_rate(cubes).set_index("cube_color")
     assert res.loc["green", "missed"] == 2
     assert res.loc["blue", "missed"] == 0
+
+
+def test_add_spc_per_group():
+    """每個 model_tag 各自算 SPC：中心線 p_bar 應為各組自己的成功率。"""
+    df = pd.DataFrame([
+        {"job_id": 1, "model_tag": "epoch_200", "success": True},
+        {"job_id": 2, "model_tag": "epoch_200", "success": True},
+        {"job_id": 3, "model_tag": "epoch_600", "success": False},
+        {"job_id": 4, "model_tag": "epoch_600", "success": False},
+    ])
+    out = kpi.add_spc_per_group(df, window=5)
+    assert len(out) == 4
+    assert out[out["model_tag"] == "epoch_200"]["p_bar"].iloc[0] == 1.0
+    assert out[out["model_tag"] == "epoch_600"]["p_bar"].iloc[0] == 0.0

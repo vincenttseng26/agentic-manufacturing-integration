@@ -17,11 +17,17 @@ from orchestration import load_results
 from orchestration.db import query
 
 PROJECT_ROOT = pathlib.Path(__file__).parents[1]
-DEFAULT_CHECKPOINT = (
+CHECKPOINT_DIR = (
     "/home/vincent/Downloads/imitation learning tutorial/19_SMMG/training_logs/"
-    "Isaac-Sort-Cube-Franka-IK-Rel-v0/bc_rnn_low_dim_franka_stack/20260612105251/"
-    "models/model_epoch_200.pth"
+    "Isaac-Sort-Cube-Franka-IK-Rel-v0/bc_rnn_low_dim_franka_stack/20260612105251/models"
 )
+
+
+def checkpoint_for_epoch(epoch: int) -> str:
+    return f"{CHECKPOINT_DIR}/model_epoch_{epoch}.pth"
+
+
+DEFAULT_CHECKPOINT = checkpoint_for_epoch(200)
 _FORBIDDEN = ("insert ", "update ", "delete ", "drop ", "alter ", "truncate", "create ", "grant ", "revoke ")
 
 
@@ -61,13 +67,17 @@ def query_db(sql: str) -> list[dict]:
 def run_batch(
     num_rollouts: int = 10,
     seed: int = 100,
-    checkpoint: str = DEFAULT_CHECKPOINT,
+    epoch: int | None = None,
+    checkpoint: str | None = None,
     batch_id: int | None = None,
 ) -> dict:
     """跑一批分類 rollout（需 GPU，在 env_isaacsim 執行），結果寫入 DB，回傳摘要。
 
-    透過 `bash -lc` 啟用 env_isaacsim 再呼叫 isaaclab.sh（跨環境橋接：本檔在 env_agent）。
+    指定模型（擇一）：`epoch=300`（自動組 checkpoint 路徑）或 `checkpoint=完整路徑`；
+    都不給則用 DEFAULT_CHECKPOINT（epoch_200）。透過 `bash -lc` 啟用 env_isaacsim 再呼叫 isaaclab.sh。
     """
+    if checkpoint is None:
+        checkpoint = checkpoint_for_epoch(epoch) if epoch is not None else DEFAULT_CHECKPOINT
     out = PROJECT_ROOT / "data" / "results.jsonl"
     inner = (
         "source ~/env_isaacsim/bin/activate && cd ~/IsaacLab && "
