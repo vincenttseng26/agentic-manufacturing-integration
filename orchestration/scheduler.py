@@ -1,19 +1,19 @@
 """Phase 4：規則式排程器（APScheduler）— 支援多 checkpoint 並行監控。
 
 每一輪對 `--epochs` 列出的每個 checkpoint 各跑一批：
-- 同一輪內三個 checkpoint 用**相同 seed**（配對比較，之後可 McNemar）；
+- 同一輪內每個 checkpoint 用**相同 seed**（配對比較，之後可 McNemar）；
 - 跨輪 seed 遞增、不重疊，且從 SEED_BASE(100000) 起，避開既有資料(seed 100-199)。
 批量、seed、要跑哪些都是規則式（非 LLM）。
 
 用法（從專案根目錄）：
-    # 穩定監控 200/300/1000，每小時各 20 個（需 GPU，長駐；Ctrl+C 停）
-    ~/env_agent/bin/python -m orchestration.scheduler --epochs 200,300,1000 --interval-minutes 60 --batch-size 20
+    # 穩定監控 200/300（統計上並列的兩個真決選），每小時各 20 個（需 GPU，長駐；Ctrl+C 停）
+    ~/env_agent/bin/python -m orchestration.scheduler --epochs 200,300 --interval-minutes 60 --batch-size 20
     # demo：每 2 分鐘一輪、各 5 個
-    ~/env_agent/bin/python -m orchestration.scheduler --epochs 200,300,1000 --interval-minutes 2 --batch-size 5
+    ~/env_agent/bin/python -m orchestration.scheduler --epochs 200,300 --interval-minutes 2 --batch-size 5
     # 只跑一輪就結束
-    ~/env_agent/bin/python -m orchestration.scheduler --epochs 200,300,1000 --once
+    ~/env_agent/bin/python -m orchestration.scheduler --epochs 200,300 --once
     # 空跑測排程（不跑 sim）
-    ~/env_agent/bin/python -m orchestration.scheduler --epochs 200,300,1000 --dry-run --interval-minutes 0.1
+    ~/env_agent/bin/python -m orchestration.scheduler --epochs 200,300 --dry-run --interval-minutes 0.1
 """
 import argparse
 import pathlib
@@ -27,7 +27,7 @@ from orchestration import tools  # noqa: E402
 
 DEFAULT_INTERVAL_MINUTES = 60
 DEFAULT_BATCH_SIZE = 20
-DEFAULT_EPOCHS = "200,300,1000"
+DEFAULT_EPOCHS = "200,300"
 SEED_BASE = 100000  # 監控用 seed 起點，避開既有資料（100-199）
 _state = {"cycle": 0}
 
@@ -39,7 +39,7 @@ def _parse_epochs(spec: str) -> list[int]:
 def _tick(epochs: list[int], batch_size: int, dry_run: bool):
     _state["cycle"] += 1
     c = _state["cycle"]
-    seed = SEED_BASE + (c - 1) * batch_size  # 本輪三個 checkpoint 共用；跨輪不重疊
+    seed = SEED_BASE + (c - 1) * batch_size  # 本輪所有 checkpoint 共用；跨輪不重疊
     ts = datetime.now().strftime("%H:%M:%S")
     for epoch in epochs:
         if dry_run:
@@ -52,7 +52,7 @@ def _tick(epochs: list[int], batch_size: int, dry_run: bool):
 
 def main():
     p = argparse.ArgumentParser(description="規則式排程器：定時對多個 checkpoint 各跑一批。")
-    p.add_argument("--epochs", type=str, default=DEFAULT_EPOCHS, help="逗號分隔，如 200,300,1000")
+    p.add_argument("--epochs", type=str, default=DEFAULT_EPOCHS, help="逗號分隔，如 200,300")
     p.add_argument("--interval-minutes", type=float, default=DEFAULT_INTERVAL_MINUTES)
     p.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
     p.add_argument("--once", action="store_true", help="立即跑一輪就結束")

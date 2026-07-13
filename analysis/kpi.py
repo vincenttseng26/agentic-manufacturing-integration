@@ -23,8 +23,14 @@ def summary(jobs: pd.DataFrame) -> dict:
 
 
 def add_rolling_success_rate(jobs: pd.DataFrame, window: int = 5) -> pd.DataFrame:
-    """加一欄滾動成功率（依 job_id 排序）。"""
+    """加一欄滾動成功率（依 job_id 排序），並加組內序號 job_seq（1..n）。
+
+    job_seq 是給 Power BI 小倍數用的：job_id 是全表遞增的全域序號，不同 checkpoint
+    佔的區間不同，小倍數共用一個 X 軸尺度時會讓每張圖的資料被壓在一小段、其餘留白。
+    job_seq 永遠從 1 開始，各小倍數面板可以共用同一個有意義的 X 軸範圍。
+    """
     jobs = jobs.sort_values("job_id").reset_index(drop=True)
+    jobs["job_seq"] = jobs.index + 1
     jobs["rolling_success_rate"] = jobs["success"].astype(float).rolling(window, min_periods=1).mean()
     return jobs
 

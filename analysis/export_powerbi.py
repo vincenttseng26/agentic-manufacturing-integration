@@ -35,7 +35,8 @@ def export(out_dir: str = "data") -> dict:
     if not jobs.empty:
         # 從 model_tag（epoch_200）抽數字 epoch，供 Power BI 折線圖 X 軸正確排序
         jobs["model_epoch"] = jobs["model_tag"].str.extract(r"(\d+)", expand=False).astype(float)
-        jobs = kpi.add_spc_per_group(jobs, group_col="model_tag", window=5)  # 每個 checkpoint 各自算 SPC
+        # window=20：n=300 資料夠大可以拉大窗；window=5 對 p≈0.5-0.6 不滿足 np̄≥5 的 p-chart 經驗法則，line 太鋸齒
+        jobs = kpi.add_spc_per_group(jobs, group_col="model_tag", window=20)  # 每個 checkpoint 各自算 SPC
         jobs["success_int"] = jobs["success"].astype(int)  # Power BI 加總方便
 
     jobs_path = out / "powerbi_jobs.csv"
