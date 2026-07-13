@@ -15,6 +15,8 @@ env_agent/
 # Data / artifacts（資料集、模型、hdf5、Power BI 匯出檔不 commit）
 data/*
 !data/.gitkeep
+# 給沒 GPU 的讀者照著跑 DB / 分析用的範例（全 20 個 checkpoint sweep，6000 筆）
+!data/sample_sweep.jsonl
 *.hdf5
 *.pth
 *.xlsx
