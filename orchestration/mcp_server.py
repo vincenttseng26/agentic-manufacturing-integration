@@ -20,9 +20,10 @@ mcp = FastMCP("agentic-manufacturing")
 
 
 @mcp.tool()
-def get_kpi() -> dict:
-    """回傳目前 DB 的整體 KPI、失敗階段 Pareto、各顏色方塊失敗率。回答「成功率多少/哪裡最常失敗」用這個。"""
-    return tools.get_kpi()
+def get_kpi(model_tag: str = "") -> dict:
+    """回傳 DB 的整體 KPI、失敗階段 Pareto、各顏色方塊失敗率。回答「成功率多少/哪裡最常失敗」用這個。
+    model_tag 留空＝統計全部資料；給 epoch_300 這類值＝只統計該 checkpoint。"""
+    return tools.get_kpi(model_tag=model_tag or None)
 
 
 @mcp.tool()

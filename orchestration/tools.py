@@ -31,11 +31,22 @@ DEFAULT_CHECKPOINT = checkpoint_for_epoch(200)
 _FORBIDDEN = ("insert ", "update ", "delete ", "drop ", "alter ", "truncate", "create ", "grant ", "revoke ")
 
 
-def get_kpi() -> dict:
-    """整體 KPI + 失敗階段 Pareto + 各顏色方塊失敗率。"""
-    jobs = pd.DataFrame(query("SELECT job_id, success, cycle_time_steps, failure_stage FROM jobs"))
-    cubes = pd.DataFrame(query("SELECT cube_color, placed_correctly FROM cube_results"))
+def get_kpi(model_tag: str | None = None) -> dict:
+    """整體 KPI + 失敗階段 Pareto + 各顏色方塊失敗率。model_tag 指定時只統計該 checkpoint。"""
+    where = "WHERE model_tag = %s" if model_tag else ""
+    params = (model_tag,) if model_tag else None
+    jobs = pd.DataFrame(
+        query(f"SELECT job_id, success, cycle_time_steps, failure_stage FROM jobs {where}", params)
+    )
+    cubes = pd.DataFrame(
+        query(
+            "SELECT c.cube_color, c.placed_correctly FROM cube_results c "
+            f"JOIN jobs j ON j.job_id = c.job_id {'WHERE j.model_tag = %s' if model_tag else ''}",
+            params,
+        )
+    )
     return {
+        "model_tag": model_tag or "all",
         "summary": kpi.summary(jobs) if not jobs.empty else {},
         "failure_pareto": kpi.failure_pareto(jobs).to_dict("records") if not jobs.empty else [],
         "cube_miss_rate": kpi.cube_miss_rate(cubes).to_dict("records") if not cubes.empty else [],
@@ -90,7 +101,7 @@ def run_batch(
     )
     # stdio MCP 以 stdout 傳 JSONRPC：子行程（login shell + sim）的輸出必須導進 log 檔，
     # 一碰到 stdout 就會污染協定通道（client 會 Failed to parse JSONRPC message）。
-    with open(log_path, "w") as log:
+    with open(log_path, "w", encoding="utf-8") as log:
         subprocess.run(["bash", "-lc", inner], check=True, stdout=log, stderr=subprocess.STDOUT)
     n = load_results.load_jsonl(str(out), batch_id=batch_id)
     return {"loaded": n, "kpi": get_kpi()["summary"]}
