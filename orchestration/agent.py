@@ -166,7 +166,9 @@ async def chat(model: str = MODEL):
             contents: list = []
             while True:
                 q = (await loop.run_in_executor(None, input, "你 > ")).strip()
-                if q.lower() in {"exit", "quit", "q", ""}:
+                if not q:  # 空白行忽略（貼上問題常夾帶多餘換行，別當成退出）
+                    continue
+                if q.lower() in {"exit", "quit", "q"}:
                     print("掰掰 👋")
                     break
                 contents.append(types.Content(role="user", parts=[types.Part(text=q)]))
