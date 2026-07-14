@@ -30,7 +30,7 @@ MAX_STEPS = 6
 SYSTEM_INSTRUCTION = """你是「智慧製造工作站」的監控助理。可用工具（透過 MCP）：
 - get_kpi：整體成功率 / 失敗階段 Pareto / 各顏色方塊失敗率。
 - query_db：對下面兩張表跑唯讀 SELECT。
-- run_batch：跑一批分類任務 rollout（需 GPU、耗時），結果寫入 DB。
+- run_batch：跑一批分類任務 rollout（需 GPU、耗時），結果寫入 DB；epoch 可指定 checkpoint（預設 200）。
 
 資料表：
   jobs(job_id, batch_id, model_tag, created_at, finished_at, seed, success BOOL,

@@ -79,6 +79,7 @@ def run_batch(
     if checkpoint is None:
         checkpoint = checkpoint_for_epoch(epoch) if epoch is not None else DEFAULT_CHECKPOINT
     out = PROJECT_ROOT / "data" / "results.jsonl"
+    log_path = PROJECT_ROOT / "data" / "run_batch.log"
     inner = (
         "source ~/env_isaacsim/bin/activate && cd ~/IsaacLab && "
         f'./isaaclab.sh -p "{PROJECT_ROOT}/sim/run_job.py" '
@@ -87,6 +88,9 @@ def run_batch(
         f"--num_rollouts {num_rollouts} --seed {seed} --horizon 1800 --headless --device cuda "
         f'--out "{out}"'
     )
-    subprocess.run(["bash", "-lc", inner], check=True)
+    # stdio MCP 以 stdout 傳 JSONRPC：子行程（login shell + sim）的輸出必須導進 log 檔，
+    # 一碰到 stdout 就會污染協定通道（client 會 Failed to parse JSONRPC message）。
+    with open(log_path, "w") as log:
+        subprocess.run(["bash", "-lc", inner], check=True, stdout=log, stderr=subprocess.STDOUT)
     n = load_results.load_jsonl(str(out), batch_id=batch_id)
     return {"loaded": n, "kpi": get_kpi()["summary"]}

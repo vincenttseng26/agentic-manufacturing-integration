@@ -32,9 +32,9 @@ def query_db(sql: str) -> list[dict]:
 
 
 @mcp.tool()
-def run_batch(num_rollouts: int = 10, seed: int = 100) -> dict:
-    """跑一批分類任務 rollout（需 GPU、耗時數分鐘），結果寫入 DB 後回傳摘要。使用者說「跑 N 個任務」時用這個。"""
-    return tools.run_batch(num_rollouts=num_rollouts, seed=seed)
+def run_batch(num_rollouts: int = 10, seed: int = 100, epoch: int = 200) -> dict:
+    """跑一批分類任務 rollout（需 GPU、耗時數分鐘），結果寫入 DB 後回傳摘要。使用者說「跑 N 個任務」時用這個；epoch 指定用哪個 checkpoint（例 200 / 300）。"""
+    return tools.run_batch(num_rollouts=num_rollouts, seed=seed, epoch=epoch)
 
 
 if __name__ == "__main__":
