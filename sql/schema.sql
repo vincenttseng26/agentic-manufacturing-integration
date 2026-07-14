@@ -1,5 +1,5 @@
 -- Agentic Manufacturing Integration — PostgreSQL schema
--- 整個系統的資料契約。改這裡等於改契約，改前想清楚。
+-- 整個系統的資料契約。
 
 -- 一次 rollout = 一張「工單/批次」
 CREATE TABLE IF NOT EXISTS jobs (
